@@ -159,7 +159,8 @@ void MESI_SMPCache::writeLine(uint32_t wrPC, uint32_t addr){
       numWriteOnInvalidMisses++;
     }
   
-    MESI_SMPCache::InvalidateReply inv_ack = writeRemoteAction(addr);
+    //MESI_SMPCache::InvalidateReply inv_ack = writeRemoteAction(addr);
+    writeRemoteAction(addr);
     numInvalidatesSent++;
 
     //Fill the line with the new write
@@ -172,7 +173,8 @@ void MESI_SMPCache::writeLine(uint32_t wrPC, uint32_t addr){
     numWriteMisses++;
     numWriteOnSharedMisses++;
       
-    MESI_SMPCache::InvalidateReply inv_ack = writeRemoteAction(addr);
+    //MESI_SMPCache::InvalidateReply inv_ack = writeRemoteAction(addr);
+    writeRemoteAction(addr);
     numInvalidatesSent++;
 
     st->changeStateTo(MESI_MODIFIED);

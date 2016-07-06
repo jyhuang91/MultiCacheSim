@@ -33,6 +33,7 @@ public:
   int numInvalidatesSent;
   
   SMPCache(int cpuid, std::vector<SMPCache * > * cacheVector);
+  virtual ~SMPCache() {}
 
   int getCPUId();
   std::vector<SMPCache * > *getCacheVector();

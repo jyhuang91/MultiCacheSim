@@ -17,7 +17,7 @@
 # This defines tests which run tools of the same name.  This is simply for convenience to avoid
 # defining the test name twice (once in TOOL_ROOTS and again in TEST_ROOTS).
 # Tests defined here should not be defined in TOOL_ROOTS and TEST_ROOTS.
-TEST_TOOL_ROOTS := mcs
+TEST_TOOL_ROOTS := mcs MSI_SMPCache MESI_SMPCache
 
 # This defines the tests to be run that were not already defined in TEST_TOOL_ROOTS.
 TEST_ROOTS :=
@@ -79,7 +79,7 @@ LIB_ROOTS :=
 # This section contains the build rules for all binaries that have special build rules.
 # See makefile.default.rules for the default build rules.
 
-TOOL_CXXFLAGS += -DPIN 
+TOOL_CXXFLAGS += -DPIN -DUSE_STL_PORT
 
 $(OBJDIR)SMPCache$(OBJ_SUFFIX) : SMPCache.cpp
 	$(CXX) $(TOOL_CXXFLAGS) $(COMP_OBJ)$@ $<
@@ -99,11 +99,11 @@ $(OBJDIR)nanassert$(OBJ_SUFFIX) : nanassert.cpp
 $(OBJDIR)MultiCacheSim_PinDriver$(OBJ_SUFFIX) : MultiCacheSim_PinDriver.cpp
 	$(CXX) $(TOOL_CXXFLAGS) $(COMP_OBJ)$@ $<
 
-$(OBJDIR)MESI_SMPCache$(OBJ_SUFFIX) : MESI_SMPCache.cpp
-	$(CXX) -fPIC -shared $(CXXFLAGS) $@ $< SMPCache.cpp Snippets.cpp nanassert.cpp
+$(OBJDIR)MESI_SMPCache$(PINTOOL_SUFFIX) : MESI_SMPCache.cpp
+	$(CXX) -fPIC -shared $(CXXFLAGS) $(TOOL_CXXFLAGS) -o $@ $< SMPCache.cpp Snippets.cpp nanassert.cpp $(TOOL_LPATHS) $(TOOL_LIBS)
 
 $(OBJDIR)MSI_SMPCache$(PINTOOL_SUFFIX) : MSI_SMPCache.cpp
-	$(CXX) -fPIC -shared $(CXXFLAGS) -o $@ $< SMPCache.cpp Snippets.cpp nanassert.cpp
+	$(CXX) -fPIC -shared $(CXXFLAGS) $(TOOL_CXXFLAGS) -o $@ $< SMPCache.cpp Snippets.cpp nanassert.cpp $(TOOL_LPATHS) $(TOOL_LIBS)
 
 $(OBJDIR)mcs$(PINTOOL_SUFFIX) : $(OBJDIR)SMPCache$(OBJ_SUFFIX) $(OBJDIR)MultiCacheSim$(OBJ_SUFFIX) $(OBJDIR)CacheCore$(OBJ_SUFFIX) $(OBJDIR)Snippets$(OBJ_SUFFIX) $(OBJDIR)nanassert$(OBJ_SUFFIX) $(OBJDIR)MultiCacheSim_PinDriver$(OBJ_SUFFIX)
 	$(LINKER) $(TOOL_LDFLAGS) -shared $(OBJDIR)SMPCache$(OBJ_SUFFIX) $(OBJDIR)MultiCacheSim$(OBJ_SUFFIX) $(OBJDIR)CacheCore$(OBJ_SUFFIX) $(OBJDIR)Snippets$(OBJ_SUFFIX) $(OBJDIR)nanassert$(OBJ_SUFFIX) $(OBJDIR)MultiCacheSim_PinDriver$(OBJ_SUFFIX) -o $(OBJDIR)mcs$(PINTOOL_SUFFIX) $(TOOL_LPATHS) $(TOOL_LIBS)
