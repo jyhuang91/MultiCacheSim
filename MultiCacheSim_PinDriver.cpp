@@ -78,9 +78,11 @@ VOID TurnInstrumentationOff(ADDRINT tid){
     instrumentationStatus[PIN_ThreadId()] = false; 
 }
 
-VOID PINTOOL_dummy_approx_region(CHAR * name, VOID * data, ADDRINT range, CHAR * data_type)
+// Jiayi, instrument dummy function and print out approximate region
+VOID PINTOOL_dummy_approx_region(CHAR * name, VOID * data, unsigned long range, CHAR * data_type)
 {
     fprintf(stderr, "PIN approximate region %s wihtout parameters (addr: %p, range %lu, type: %s)\n", name, data, range, data_type);
+//    cerr << "PIN approximate region " << name << " wihtout parameters (addr: " << data << ", range: " << range << ", type: " << data_type << endl;
 }
 
 VOID instrumentRoutine(RTN rtn, VOID *v){
@@ -119,18 +121,6 @@ VOID instrumentRoutine(RTN rtn, VOID *v){
         RTN_Close(rtn);
     }
 
-}
-
-// Jiayi, instrument dummy function and print out approximate region
-//VOID PINTOOL_dummy_approx_region(CHAR * name, VOID * data, ADDRINT range, CHAR * data_type)
-//{
-//	fprintf(stderr, "PIN approximate region: (addr: %p, range: %lu, data_type: %s)\n",
-//			data, range, data_type);
-//}
-
-VOID MallocBefore(CHAR * name, ADDRINT size)
-{
-    fprintf(stderr, "PIN: %s (size: %lu)\n", name, size);
 }
 
 VOID instrumentImage(IMG img, VOID *v)
