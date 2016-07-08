@@ -42,12 +42,19 @@ KNOB<unsigned int> KnobAssoc(KNOB_MODE_WRITEONCE, "pintool",
 KNOB<unsigned int> KnobNumCaches(KNOB_MODE_WRITEONCE, "pintool",
         "numcaches", "1", "Number of Caches to Simulate");
 
+#ifdef MAC
+KNOB<string> KnobProtocol(KNOB_MODE_WRITEONCE, "pintool",
+        "protos", "obj-intel64/MSI_SMPCache.dylib", "Cache Coherence Protocol Modules To Simulate");
+
+KNOB<string> KnobReference(KNOB_MODE_WRITEONCE, "pintool",
+        "reference", "obj-intel64/MESI_SMPCache.dylib", "Reference Protocol that is compared to test Protocols for Correctness");
+#else
 KNOB<string> KnobProtocol(KNOB_MODE_WRITEONCE, "pintool",
         "protos", "obj-intel64/MSI_SMPCache.so", "Cache Coherence Protocol Modules To Simulate");
 
 KNOB<string> KnobReference(KNOB_MODE_WRITEONCE, "pintool",
         "reference", "obj-intel64/MESI_SMPCache.so", "Reference Protocol that is compared to test Protocols for Correctness");
-
+#endif
 
 #define MAX_NTHREADS 64
 unsigned long instrumentationStatus[MAX_NTHREADS];

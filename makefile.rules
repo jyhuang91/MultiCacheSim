@@ -81,6 +81,12 @@ LIB_ROOTS :=
 
 TOOL_CXXFLAGS += -DPIN -DUSE_STL_PORT
 
+ifeq ($(TARGET_OS),mac)
+	TOOL_CXXFLAGS += -DMAC
+else
+	LDFLAGS := -Wl,-hash-style=sysv
+endif
+
 $(OBJDIR)SMPCache$(OBJ_SUFFIX) : SMPCache.cpp
 	$(CXX) $(TOOL_CXXFLAGS) $(COMP_OBJ)$@ $<
 
@@ -99,16 +105,20 @@ $(OBJDIR)nanassert$(OBJ_SUFFIX) : nanassert.cpp
 $(OBJDIR)MultiCacheSim_PinDriver$(OBJ_SUFFIX) : MultiCacheSim_PinDriver.cpp
 	$(CXX) $(TOOL_CXXFLAGS) $(COMP_OBJ)$@ $<
 
-#$(OBJDIR)MESI_SMPCache$(OBJ_SUFFIX) : MESI_SMPCache.cpp
-#	$(CXX) -fPIC -shared $(CXXFLAGS) $@ $< SMPCache.cpp Snippets.cpp nanassert.cpp
+$(OBJDIR)MESI_SMPCache$(PINTOOL_SUFFIX) : MESI_SMPCache.cpp
+	$(CXX) -fPIC -shared $(LDFLAGS) $(CXXFLAGS) $(TOOL_CXXFLAGS) -o $@ $< SMPCache.cpp Snippets.cpp nanassert.cpp $(TOOL_LPATHS) $(TOOL_LIBS)
 
 $(OBJDIR)MSI_SMPCache$(PINTOOL_SUFFIX) : MSI_SMPCache.cpp
-	$(CXX) -fPIC -shared -Wl,-hash-style=sysv $(CXXFLAGS) $(TOOL_CXXFLAGS) -o $@ $< SMPCache.cpp Snippets.cpp nanassert.cpp $(TOOL_LPATHS) $(TOOL_LIBS)
+	$(CXX) -fPIC -shared $(LDFLAGS) $(CXXFLAGS) $(TOOL_CXXFLAGS) -o $@ $< SMPCache.cpp Snippets.cpp nanassert.cpp $(TOOL_LPATHS) $(TOOL_LIBS)
 
-$(OBJDIR)MESI_SMPCache$(PINTOOL_SUFFIX) : MESI_SMPCache.cpp
-	$(CXX) -fPIC -shared -Wl,-hash-style=sysv $(CXXFLAGS) $(TOOL_CXXFLAGS) -o $@ $< SMPCache.cpp Snippets.cpp nanassert.cpp $(TOOL_LPATHS) $(TOOL_LIBS)
 
 $(OBJDIR)mcs$(PINTOOL_SUFFIX) : $(OBJDIR)SMPCache$(OBJ_SUFFIX) $(OBJDIR)MultiCacheSim$(OBJ_SUFFIX) $(OBJDIR)CacheCore$(OBJ_SUFFIX) $(OBJDIR)Snippets$(OBJ_SUFFIX) $(OBJDIR)nanassert$(OBJ_SUFFIX) $(OBJDIR)MultiCacheSim_PinDriver$(OBJ_SUFFIX)
 	$(LINKER) $(TOOL_LDFLAGS) -shared $(OBJDIR)SMPCache$(OBJ_SUFFIX) $(OBJDIR)MultiCacheSim$(OBJ_SUFFIX) $(OBJDIR)CacheCore$(OBJ_SUFFIX) $(OBJDIR)Snippets$(OBJ_SUFFIX) $(OBJDIR)nanassert$(OBJ_SUFFIX) $(OBJDIR)MultiCacheSim_PinDriver$(OBJ_SUFFIX) -o $(OBJDIR)mcs$(PINTOOL_SUFFIX) $(TOOL_LPATHS) $(TOOL_LIBS)
 
-
+print_var:
+	@echo CXX: "\n\t" $(CXX)
+	@echo CXXFLAGS: "\n\t" $(CXXFLAGS)
+	@echo TOOL_CXXFLAGS: "\n\t" $(TOOL_CXXFLAGS)
+	@echo TOOL_LDFLAGS: "\n\t" $(TOOL_LDFLAGS)
+	@echo TOOL_LPAHTS: "\n\t" $(TOOL_LPATHS)
+	@echo TOOL_LIBS: "\n\t" $(TOOL_LIBS)
