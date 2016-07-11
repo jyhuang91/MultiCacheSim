@@ -67,7 +67,7 @@ void MultiCacheSim::createNewCache(){
 #endif
 }
 
-void MultiCacheSim::readLine(unsigned long tid, unsigned long rdPC, unsigned long addr){
+void MultiCacheSim::readLine(unsigned long tid, unsigned long rdPC, unsigned long addr, bool approx){
 #ifndef PIN
     pthread_mutex_lock(&allCachesLock);
 #else
@@ -79,7 +79,7 @@ void MultiCacheSim::readLine(unsigned long tid, unsigned long rdPC, unsigned lon
     if(!cacheToRead){
         return;
     }
-    cacheToRead->readLine(rdPC,addr);
+    cacheToRead->readLine(rdPC,addr,approx);
 
 
 #ifndef PIN
@@ -90,7 +90,7 @@ void MultiCacheSim::readLine(unsigned long tid, unsigned long rdPC, unsigned lon
     return;
 }
 
-void MultiCacheSim::writeLine(unsigned long tid, unsigned long wrPC, unsigned long addr){
+void MultiCacheSim::writeLine(unsigned long tid, unsigned long wrPC, unsigned long addr, bool approx){
 #ifndef PIN
     pthread_mutex_lock(&allCachesLock);
 #else
@@ -102,7 +102,7 @@ void MultiCacheSim::writeLine(unsigned long tid, unsigned long wrPC, unsigned lo
     if(!cacheToWrite){
         return;
     }
-    cacheToWrite->writeLine(wrPC,addr);
+    cacheToWrite->writeLine(wrPC,addr,approx);
 
 
 #ifndef PIN

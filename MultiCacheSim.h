@@ -43,8 +43,8 @@ public:
   void createNewCache();
  
   //These three functions implement the CacheInterface interface 
-  void readLine(unsigned long tid, unsigned long rdPC, unsigned long addr);
-  void writeLine(unsigned long tid, unsigned long wrPC, unsigned long addr);
+  void readLine(unsigned long tid, unsigned long rdPC, unsigned long addr, bool approx = false);
+  void writeLine(unsigned long tid, unsigned long wrPC, unsigned long addr, bool approx = false);
   void dumpStatsForAllCaches(bool concise);
 
   //Utility Function to get the cache object that has the specified CPUid

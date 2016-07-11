@@ -110,7 +110,7 @@ MSI_SMPCache::RemoteReadService MSI_SMPCache::readRemoteAction(uint32_t addr){
 }
 
 
-void MSI_SMPCache::readLine(uint32_t rdPC, uint32_t addr){
+void MSI_SMPCache::readLine(uint32_t rdPC, uint32_t addr, bool approx){
   /*
    *This method implements actions taken on a read access to address addr
    *at instruction rdPC
@@ -155,6 +155,47 @@ void MSI_SMPCache::readLine(uint32_t rdPC, uint32_t addr){
       }
 
     } 
+
+    /* ------------ Frequent Pattern Approximation :: START ------------ */
+    if (approx) {
+
+        uint64_t long_addr = addr;
+        unsigned int * cache_line = (unsigned int *) long_addr;
+        
+        //fprintf(stderr, "  approx line: 0x%x\n", addr);
+        //fprintf(stderr, "Before approximate:\n");
+        //float * data = (float *) long_addr;
+        //for (unsigned int i = 0; i < 16; ++i) {
+        //    fprintf(stderr, "%d: %f\n", i, data[i]);
+        //}
+
+        unsigned int error_percent_allowed = 10;
+        for (unsigned int i = 0; i < 16; ++i) {
+            unsigned int word = cache_line[i];
+            if (word == 0 || word < error_percent_allowed) {
+                continue;
+            }
+
+            unsigned int error_allowed = (double) word * error_percent_allowed / 100.0;
+            //unsigned int temp = error_allowed;
+            int count = 0;
+            for (; error_allowed > 1; error_allowed <<= 1) {
+                ++count;
+                if (error_allowed & 0x80000000) break;
+            }
+            if (error_allowed == 1) count = 31;
+            else if (error_allowed == 0) count = 32;
+            unsigned int mask = 0xFFFFFFFF >> count;
+            mask = ~mask;
+            word &= mask;
+            cache_line[i] = word;
+        }
+        //fprintf(stderr, "After approximate:\n");
+        //for (unsigned int i = 0; i < 16; ++i) {
+        //    fprintf(stderr, "%d: %f\n", i, data[i]);
+        //}
+    }
+    /* ------------ Frequent Pattern Approximation :: END ------------ */
 
     /*Fill the line*/
     fillLine(addr,MSI_SHARED); 
@@ -221,7 +262,7 @@ MSI_SMPCache::InvalidateReply MSI_SMPCache::writeRemoteAction(uint32_t addr){
 }
 
 
-void MSI_SMPCache::writeLine(uint32_t wrPC, uint32_t addr){
+void MSI_SMPCache::writeLine(uint32_t wrPC, uint32_t addr, bool approx){
   /*This method implements actions taken when instruction wrPC
    *writes to memory location addr*/
 

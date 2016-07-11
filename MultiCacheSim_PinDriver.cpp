@@ -10,6 +10,15 @@
 
 #include "MultiCacheSim.h"
 
+typedef struct _ApproxRegion {
+	VOID * addr;
+	UINT32 range;
+    VOID * addr_end;
+    struct _ApproxRegion * next;
+} ApproxRegion;
+
+ApproxRegion * approx_region_list = NULL;
+
 std::vector<MultiCacheSim *> Caches;
 MultiCacheSim *ReferenceProtocol;
 PIN_LOCK globalLock;
@@ -81,7 +90,13 @@ VOID TurnInstrumentationOff(ADDRINT tid){
 // Jiayi, instrument dummy function and print out approximate region
 VOID PINTOOL_dummy_approx_region(CHAR * name, VOID * data, unsigned long range, CHAR * data_type)
 {
-    fprintf(stderr, "PIN approximate region %s wihtout parameters (addr: %p, range %lu, type: %s)\n", name, data, range, data_type);
+    ApproxRegion * approx_region = new ApproxRegion;
+	approx_region->addr = data;
+	approx_region->range = range;
+    approx_region->addr_end = ((FLT32 *) data) + range;
+    approx_region->next = approx_region_list;
+    approx_region_list = approx_region;
+    fprintf(stderr, "PIN approximate region %s wihtout parameters (addr %p, range %lu, addr_end %p, type %s)\n", name, data, range, approx_region->addr_end, data_type);
 //    cerr << "PIN approximate region " << name << " wihtout parameters (addr: " << data << ", range: " << range << ", type: " << data_type << endl;
 }
 
@@ -129,12 +144,22 @@ VOID instrumentImage(IMG img, VOID *v)
 
 void Read(THREADID tid, ADDRINT addr, ADDRINT inst){
     PIN_GetLock(&globalLock, 1);
+    bool approx = false;
+    ApproxRegion * approx_region = approx_region_list;
+    while (approx_region != NULL) {
+        if (addr >= (ADDRINT) approx_region->addr && addr < (ADDRINT) approx_region->addr_end) {
+            approx = true;
+            break;
+        } else {
+            approx_region = approx_region->next;
+        }
+    }
     if(useRef){
-        ReferenceProtocol->readLine(tid,inst,addr);
+        ReferenceProtocol->readLine(tid,inst,addr,approx);
     }
     std::vector<MultiCacheSim *>::iterator i,e;
     for(i = Caches.begin(), e = Caches.end(); i != e; i++){
-        (*i)->readLine(tid,inst,addr);
+        (*i)->readLine(tid,inst,addr,approx);
 
         if(useRef && (stopOnError || printOnError)){
             if( ReferenceProtocol->getStateAsInt(tid,addr) !=
@@ -158,14 +183,24 @@ void Read(THREADID tid, ADDRINT addr, ADDRINT inst){
 
 void Write(THREADID tid, ADDRINT addr, ADDRINT inst){
     PIN_GetLock(&globalLock, 1);
+    bool approx = false;
+    ApproxRegion * approx_region = approx_region_list;
+    while (approx_region != NULL) {
+        if (addr >= (ADDRINT) approx_region->addr && addr < (ADDRINT) approx_region->addr_end) {
+            approx = true;
+            break;
+        } else {
+            approx_region = approx_region->next;
+        }
+    }
     if(useRef){
-        ReferenceProtocol->writeLine(tid,inst,addr);
+        ReferenceProtocol->writeLine(tid,inst,addr,approx);
     }
     std::vector<MultiCacheSim *>::iterator i,e;
 
     for(i = Caches.begin(), e = Caches.end(); i != e; i++){
 
-        (*i)->writeLine(tid,inst,addr);
+        (*i)->writeLine(tid,inst,addr,approx);
 
         if(useRef && (stopOnError || printOnError)){
 
@@ -212,7 +247,6 @@ VOID instrumentTrace(TRACE trace, VOID *v)
         }
     }
 }
-
 
 VOID threadBegin(THREADID threadid, CONTEXT *sp, INT32 flags, VOID *v)
 {
@@ -261,6 +295,10 @@ int main(int argc, char *argv[])
     for(int i = 0; i < MAX_NTHREADS; i++){
         instrumentationStatus[i] = true;
     }
+
+//    approx_region.addr = NULL;
+//    approx_region.range = 0;
+//    approx_region.addr_end = NULL;
 
     unsigned long csize = KnobCacheSize.Value();
     unsigned long bsize = KnobBlockSize.Value();

@@ -60,7 +60,7 @@ MESI_SMPCache::RemoteReadService MESI_SMPCache::readRemoteAction(uint32_t addr){
   return MESI_SMPCache::RemoteReadService(false,false);
 }
 
-void MESI_SMPCache::readLine(uint32_t rdPC, uint32_t addr){
+void MESI_SMPCache::readLine(uint32_t rdPC, uint32_t addr, bool approx){
 
   MESI_SMPCacheState *st = (MESI_SMPCacheState *)cache->findLine(addr);    
   //fprintf(stderr,"In MESI ReadLine\n");
@@ -147,7 +147,7 @@ MESI_SMPCache::InvalidateReply MESI_SMPCache::writeRemoteAction(uint32_t addr){
 }
 
 
-void MESI_SMPCache::writeLine(uint32_t wrPC, uint32_t addr){
+void MESI_SMPCache::writeLine(uint32_t wrPC, uint32_t addr, bool approx){
 
   MESI_SMPCacheState * st = (MESI_SMPCacheState *)cache->findLine(addr);    
     
