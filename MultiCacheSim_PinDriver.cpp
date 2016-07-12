@@ -93,10 +93,11 @@ VOID PINTOOL_dummy_approx_region(CHAR * name, VOID * data, unsigned long range, 
     ApproxRegion * approx_region = new ApproxRegion;
 	approx_region->addr = data;
 	approx_region->range = range;
-    approx_region->addr_end = ((FLT32 *) data) + range;
+    approx_region->addr_end = (VOID *)((unsigned long)data + range);
     approx_region->next = approx_region_list;
     approx_region_list = approx_region;
     fprintf(stderr, "PIN approximate region %s wihtout parameters (addr %p, range %lu, addr_end %p, type %s)\n", name, data, range, approx_region->addr_end, data_type);
+    //fprintf(stderr, "PIN approximate region %s wihtout parameters (addr %lx, range %lu, addr_end %lx, type %s)\n", name, (ADDRINT) data, range, (ADDRINT) approx_region->addr_end, data_type);
 //    cerr << "PIN approximate region " << name << " wihtout parameters (addr: " << data << ", range: " << range << ", type: " << data_type << endl;
 }
 
@@ -143,7 +144,8 @@ VOID instrumentImage(IMG img, VOID *v)
 }
 
 void Read(THREADID tid, ADDRINT addr, ADDRINT inst){
-    PIN_GetLock(&globalLock, 1);
+    //PIN_GetLock(&globalLock, 1);
+    PIN_GetLock(&globalLock, tid+1);
     bool approx = false;
     ApproxRegion * approx_region = approx_region_list;
     while (approx_region != NULL) {
@@ -182,7 +184,8 @@ void Read(THREADID tid, ADDRINT addr, ADDRINT inst){
 }
 
 void Write(THREADID tid, ADDRINT addr, ADDRINT inst){
-    PIN_GetLock(&globalLock, 1);
+    //PIN_GetLock(&globalLock, 1);
+    PIN_GetLock(&globalLock, tid+1);
     bool approx = false;
     ApproxRegion * approx_region = approx_region_list;
     while (approx_region != NULL) {
@@ -250,12 +253,18 @@ VOID instrumentTrace(TRACE trace, VOID *v)
 
 VOID threadBegin(THREADID threadid, CONTEXT *sp, INT32 flags, VOID *v)
 {
-
+    PIN_GetLock(&globalLock, threadid+1);
+    fprintf(stderr, "thread begin %d\n", threadid);
+    fflush(stderr);
+    PIN_ReleaseLock(&globalLock);
 }
 
 VOID threadEnd(THREADID threadid, const CONTEXT *sp, INT32 flags, VOID *v)
 {
-
+    PIN_GetLock(&globalLock, threadid+1);
+    fprintf(stderr, "thread end %d code %d\n", threadid, flags);
+    fflush(stderr);
+    PIN_ReleaseLock(&globalLock);
 }
 
 VOID dumpInfo(){
