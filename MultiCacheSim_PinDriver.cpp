@@ -93,12 +93,10 @@ VOID PINTOOL_dummy_approx_region(CHAR * name, VOID * data, unsigned long range, 
     ApproxRegion * approx_region = new ApproxRegion;
 	approx_region->addr = data;
 	approx_region->range = range;
-    approx_region->addr_end = (VOID *)((unsigned long)data + range);
+    approx_region->addr_end = (VOID *) ((unsigned long) data + range);
     approx_region->next = approx_region_list;
     approx_region_list = approx_region;
     fprintf(stderr, "PIN approximate region %s wihtout parameters (addr %p, range %lu, addr_end %p, type %s)\n", name, data, range, approx_region->addr_end, data_type);
-    //fprintf(stderr, "PIN approximate region %s wihtout parameters (addr %lx, range %lu, addr_end %lx, type %s)\n", name, (ADDRINT) data, range, (ADDRINT) approx_region->addr_end, data_type);
-//    cerr << "PIN approximate region " << name << " wihtout parameters (addr: " << data << ", range: " << range << ", type: " << data_type << endl;
 }
 
 VOID instrumentRoutine(RTN rtn, VOID *v){
@@ -304,10 +302,6 @@ int main(int argc, char *argv[])
     for(int i = 0; i < MAX_NTHREADS; i++){
         instrumentationStatus[i] = true;
     }
-
-//    approx_region.addr = NULL;
-//    approx_region.range = 0;
-//    approx_region.addr_end = NULL;
 
     unsigned long csize = KnobCacheSize.Value();
     unsigned long bsize = KnobBlockSize.Value();
